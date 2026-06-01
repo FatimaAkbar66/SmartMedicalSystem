@@ -1,3 +1,36 @@
-.vs/  
-obj/  
-bin/ 
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build outputs
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+## NuGet
+packages/
+*.nupkg
+project.lock.json
+
+## Database
+*.mdf
+*.ldf
+*.ndf
+
+## ML Model (will regenerate)
+MLModels/risk_model.zip
+
+## Logs
+*.log
+logs/
+
+## OS Files
+.DS_Store
+Thumbs.db
+
+## Secrets
+appsettings.Development.json
