@@ -1,0 +1,231 @@
+﻿@model SmartMedicalSystem.Models.ViewModels.LoginViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Smart Medical System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-10 col-lg-9">
+
+                <div class="row g-0 shadow-lg"
+                     style="border-radius:20px; overflow:hidden; max-width:900px; margin:0 auto;">
+
+                    <!-- ── LEFT PANEL ─────────────────────── -->
+                    <div class="col-md-5 d-none d-md-flex flex-column justify-content-between p-4"
+                         style="background:linear-gradient(160deg,#2d0050,#4b0082,#0891b2);
+                        color:white; min-height:580px;">
+
+                        <!-- Logo top -->
+                        <div>
+                            <div style="width:52px;height:52px;background:rgba(255,255,255,.15);
+                                border-radius:14px;display:flex;align-items:center;
+                                justify-content:center;font-size:1.5rem;margin-bottom:1.2rem;">
+                                <i class="bi bi-hospital-fill"></i>
+                            </div>
+                            <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem;">
+                                Smart Medical<br />Error Prevention
+                            </h2>
+                            <p style="font-size:.8rem;opacity:.7;line-height:1.6;">
+                                AI-Powered Prescription Validation System
+                                for safer healthcare delivery.
+                            </p>
+                        </div>
+
+                        <!-- Features list -->
+                        <div>
+                            @foreach (var f in new[]
+                                                        {
+                                                        ("bi-shield-check",    "Real-time drug interaction detection"),
+                                                        ("bi-cpu",             "ML.NET risk prediction engine"),
+                                                        ("bi-exclamation-triangle", "Allergy conflict alerts"),
+                                                        ("bi-capsule",         "Dosage validation engine"),
+                                                        })
+                            {
+                                <div class="d-flex align-items-center gap-2 mb-2"
+                                     style="font-size:.8rem;opacity:.85;">
+                                    <i class="bi @f.Item1"
+                                       style="font-size:1rem;flex-shrink:0;
+                                    color:rgba(6,182,212,.9);"></i>
+                                    <span>@f.Item2</span>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Bottom tag -->
+                        <p style="font-size:.7rem;opacity:.5;margin:0;">
+                            KICSIT, Kahuta — CS Dept. Visual Programming 2024
+                        </p>
+                    </div>
+
+                    <!-- ── RIGHT PANEL ────────────────────── -->
+                    <div class="col-md-7 bg-white p-4 p-md-5">
+
+                        <h3 style="font-weight:800;color:#2d0050;margin-bottom:.25rem;">
+                            Welcome Back
+                        </h3>
+                        <p class="text-muted mb-4" style="font-size:.85rem;">
+                            Sign in to access your dashboard
+                        </p>
+
+                        <!-- Validation errors -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger py-2 small mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                @Html.ValidationSummary(true)
+                            </div>
+                        }
+
+                        <!-- Login Form -->
+                        <form asp-action="Login" method="post">
+
+                            <div class="mb-3">
+                                <label asp-for="Email"
+                                       class="form-label">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-envelope text-muted"></i>
+                                    </span>
+                                    <input asp-for="Email"
+                                           class="form-control border-start-0"
+                                           placeholder="you@example.com"
+                                           autocomplete="email" />
+                                </div>
+                                <span asp-validation-for="Email"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Password"
+                                       class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-lock text-muted"></i>
+                                    </span>
+                                    <input asp-for="Password"
+                                           class="form-control border-start-0"
+                                           id="pwdInput"
+                                           placeholder="••••••••"
+                                           autocomplete="current-password" />
+                                    <button class="btn btn-outline-secondary"
+                                            type="button"
+                                            id="togglePwd">
+                                        <i class="bi bi-eye" id="eyeIcon"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Password"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input asp-for="RememberMe"
+                                       class="form-check-input"
+                                       type="checkbox" />
+                                <label asp-for="RememberMe"
+                                       class="form-check-label small">
+                                    Keep me signed in
+                                </label>
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100 py-2 fw-600 mb-3">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Sign In Securely
+                            </button>
+
+                            <p class="text-center small text-muted mb-0">
+                                New user?
+                                <a asp-action="Register"
+                                   style="color:#4b0082;font-weight:600;">
+                                    Create account
+                                </a>
+                            </p>
+                        </form>
+
+                        <!-- Demo Credentials -->
+                        <hr class="my-4" />
+                        <p class="text-center fw-600 small text-muted mb-3">
+                            Demo Accounts
+                        </p>
+
+                        <div class="row g-2">
+                            @foreach (var cred in new[]
+                                                        {
+                                                        ("Admin",     "admin@smartmedical.com",    "Admin@123",    "purple"),
+                                                        ("Doctor",    "doctor@smartmedical.com",   "Doctor@123",   "info"),
+                                                        ("Patient",   "patient@smartmedical.com",  "Patient@123",  "success"),
+                                                        ("Pharmacy",  "pharmacy@smartmedical.com", "Pharmacy@123", "warning"),
+                                                        })
+                            {
+                                <div class="col-6">
+                                    <div class="demo-credential-box"
+                                         style="cursor:pointer;"
+                                         onclick="fillLogin('@cred.Item2','@cred.Item3')">
+                                        <span class="badge bg-@cred.Item4 mb-1">
+                                            @cred.Item1
+                                        </span><br />
+                                        <small class="text-muted d-block"
+                                               style="font-size:.7rem;word-break:break-all;">
+                                            @cred.Item2
+                                        </small>
+                                        <small class="text-muted"
+                                               style="font-size:.7rem;">
+                                            @cred.Item3
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <p class="text-center mt-2"
+                           style="font-size:.7rem;color:#94a3b8;">
+                            Click any card to auto-fill credentials
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+            // Toggle password visibility
+            document.getElementById('togglePwd')
+                .addEventListener('click', function () {
+                    const inp  = document.getElementById('pwdInput');
+                    const icon = document.getElementById('eyeIcon');
+                    if (inp.type === 'password') {
+                        inp.type       = 'text';
+                        icon.className = 'bi bi-eye-slash';
+                    } else {
+                        inp.type       = 'password';
+                        icon.className = 'bi bi-eye';
+                    }
+                });
+
+            // Auto-fill demo credentials on click
+            function fillLogin(email, password) {
+                document.getElementById('Email').value    = email;
+                document.getElementById('pwdInput').value = password;
+            }
+    </script>
+</body>
+</html>
