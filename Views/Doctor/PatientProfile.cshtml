@@ -1,0 +1,391 @@
+﻿@model SmartMedicalSystem.Models.ViewModels.PatientProfileViewModel
+@{
+    ViewData["Title"] = "Patient Profile";
+    var patient = Model.Patient;
+    var risk = Model.RiskAssessment;
+    var age = patient.DateOfBirth.HasValue
+        ? (int)((DateTime.Today -
+           patient.DateOfBirth.Value).TotalDays / 365.25)
+        : 0;
+}
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-person-badge me-2"></i>
+            Patient Profile
+        </h1>
+        <p class="page-subtitle">
+            Full medical record for @patient.User?.Name
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Prescription"
+           asp-action="Create"
+           asp-route-patientId="@patient.PatientID"
+           class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>
+            New Prescription
+        </a>
+        <a asp-action="Patients"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>
+            Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT: Patient Details -->
+    <div class="col-xl-4">
+
+        <!-- Patient Identity Card -->
+        <div class="card mb-3">
+            <div class="card-body text-center py-4">
+                <div style="width:80px;height:80px;
+                            background:linear-gradient(135deg,
+                                #4b0082,#7b2fbe);
+                            border-radius:50%;display:flex;
+                            align-items:center;justify-content:center;
+                            font-size:2rem;color:white;
+                            margin:0 auto 1rem;font-weight:700;">
+                    @patient.User?.Name.Substring(0, 1).ToUpper()
+                </div>
+                <h4 class="fw-700 mb-1">@patient.User?.Name</h4>
+                <p class="text-muted small mb-3">
+                    @patient.User?.Email
+                </p>
+
+                <!-- Key Info Grid -->
+                <div class="row g-2 text-center mb-3">
+                    @foreach (var item in new[]
+                                        {
+                                        ("Age",    age > 0 ? age + " yrs"  : "N/A", "bi-calendar"),
+                                        ("Gender", patient.Gender,                   "bi-person"),
+                                        ("Blood",  patient.BloodGroup,               "bi-droplet-fill"),
+                                        ("Weight", patient.Weight + " kg",           "bi-speedometer"),
+                                        })
+                    {
+                        <div class="col-6">
+                            <div class="p-2 rounded"
+                                 style="background:#f8f9fc;">
+                                <i class="bi @item.Item3 text-purple
+                                                d-block mb-1"></i>
+                                <div style="font-size:.7rem;
+                                                color:#94a3b8;">
+                                    @item.Item1
+                                </div>
+                                <div class="fw-600 small">
+                                    @item.Item2
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(patient.Phone))
+                {
+                    <div class="text-muted small mb-1">
+                        <i class="bi bi-telephone me-1"></i>
+                        @patient.Phone
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(patient.EmergencyContact))
+                {
+                    <div class="text-muted small">
+                        <i class="bi bi-person-exclamation me-1"></i>
+                        Emergency: @patient.EmergencyContact
+                        (@patient.EmergencyPhone)
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- AI Risk Card -->
+        @if (risk != null)
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-cpu me-2"></i>
+                    ML.NET Risk Assessment
+                </div>
+                <div class="card-body text-center">
+                    <div class="risk-circle @risk.RiskColor mb-2">
+                        @((risk.RiskScore * 100).ToString("F0"))%
+                    </div>
+                    <h5 class="fw-700 text-@risk.RiskColor mb-1">
+                        @risk.RiskLevel Risk
+                    </h5>
+                    <div class="progress mb-3"
+                         style="height:8px;">
+                        <div class="progress-bar bg-@risk.RiskColor"
+                             style="width:@((risk.RiskScore*100)
+                                                              .ToString("F0"))%">
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        @risk.Summary
+                    </p>
+
+                    @if (risk.ContributingFactors.Any())
+                    {
+                        <div class="text-start mb-3">
+                            <p class="fw-600 small mb-1">
+                                Risk Factors
+                            </p>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var f in risk.ContributingFactors)
+                                {
+                                    <span class="badge"
+                                          style="background:#fee2e2;
+                                                             color:#b91c1c;
+                                                             font-weight:500;">
+                                        @f
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (risk.Recommendations.Any())
+                    {
+                        <div class="text-start">
+                            <p class="fw-600 small mb-1">
+                                Recommendations
+                            </p>
+                            @foreach (var r in risk.Recommendations)
+                            {
+                                <div class="d-flex gap-2 mb-1">
+                                    <i class="bi bi-chevron-right
+                                                           text-purple mt-1
+                                                           flex-shrink-0"
+                                       style="font-size:.7rem;"></i>
+                                    <span style="font-size:.78rem;">
+                                        @r
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <!-- RIGHT: Medical Details -->
+    <div class="col-xl-8">
+
+        <!-- Allergies -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle-fill
+                           me-2 text-danger"></i>
+                Documented Allergies
+                <span class="badge bg-danger ms-2">
+                    @Model.Allergies.Count
+                </span>
+            </div>
+            <div class="card-body">
+                @if (!Model.Allergies.Any())
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-shield-check text-success
+                                       d-block mb-2"
+                           style="font-size:2rem;"></i>
+                        No known allergies documented
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var allergy in Model.Allergies)
+                        {
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border
+                                             alert-left-@(
+                                     allergy.Severity == "Severe"
+                                         ? "critical"
+                                         : allergy.Severity == "Moderate"
+                                         ? "warning" : "info")">
+                                    <div class="d-flex justify-content-between
+                                                        align-items-start mb-1">
+                                        <strong class="small">
+                                            @allergy.Allergen
+                                        </strong>
+                                        <span class="badge bg-@(
+                                              allergy.Severity == "Severe"
+                                                  ? "danger"
+                                                  : allergy.Severity == "Moderate"
+                                                  ? "warning" : "info") text-@(
+                                              allergy.Severity == "Moderate"
+                                                  ? "dark" : "")">
+                                            @allergy.Severity
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(allergy.Reaction))
+                                    {
+                                        <p class="text-muted mb-0"
+                                           style="font-size:.78rem;">
+                                            <i class="bi bi-arrow-right me-1"></i>
+                                            @allergy.Reaction
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Medical History -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-clipboard-pulse me-2 text-purple"></i>
+                Medical History
+            </div>
+            <div class="card-body">
+                @if (!Model.MedicalHistories.Any())
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-clipboard d-block mb-2"
+                           style="font-size:2rem;"></i>
+                        No medical history recorded
+                    </div>
+                }
+                @foreach (var h in Model.MedicalHistories)
+                {
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between
+                                        align-items-start mb-2">
+                            <h6 class="fw-700 mb-0 text-purple">
+                                @h.Diagnosis
+                            </h6>
+                            <small class="text-muted">
+                                @h.DateRecorded.ToString("dd MMM yyyy")
+                            </small>
+                        </div>
+                        <div class="row g-2 small">
+                            @if (!string.IsNullOrEmpty(h.ChronicConditions))
+                            {
+                                <div class="col-md-6">
+                                    <span class="text-muted fw-600">
+                                        Chronic:
+                                    </span>
+                                    @h.ChronicConditions
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(h.SurgicalHistory))
+                            {
+                                <div class="col-md-6">
+                                    <span class="text-muted fw-600">
+                                        Surgical:
+                                    </span>
+                                    @h.SurgicalHistory
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(h.CurrentMedications))
+                            {
+                                <div class="col-12">
+                                    <span class="text-muted fw-600">
+                                        Current Meds:
+                                    </span>
+                                    @h.CurrentMedications
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(h.Notes))
+                            {
+                                <div class="col-12 text-muted">
+                                    <i class="bi bi-chat-text me-1"></i>
+                                    @h.Notes
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Prescriptions -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between
+                        align-items-center">
+                <span>
+                    <i class="bi bi-journal-medical me-2 text-purple"></i>
+                    Prescription History
+                </span>
+                <a asp-controller="Prescription"
+                   asp-action="Create"
+                   asp-route-patientId="@patient.PatientID"
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus me-1"></i>New Rx
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Rx Code</th>
+                            <th>Diagnosis</th>
+                            <th>AI Risk</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Prescriptions.Any())
+                        {
+                            <tr>
+                                <td colspan="6"
+                                    class="text-center py-4 text-muted">
+                                    No prescriptions found for this patient
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var rx in Model.Prescriptions)
+                        {
+                            <tr>
+                                <td><code>@rx.PrescriptionCode</code></td>
+                                <td class="text-muted small">
+                                    @(rx.Diagnosis.Length > 40
+                                                                    ? rx.Diagnosis.Substring(0, 40) + "…"
+                                                                    : rx.Diagnosis)
+                                </td>
+                                <td>
+                                    <span class="risk-badge
+                                          risk-@rx.AIRiskLevel.ToLower()">
+                                        @rx.AIRiskLevel
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(
+                                          rx.Status == "Active" ? "success" :
+                                          rx.Status == "Dispensed" ? "info" :
+                                          "secondary")">
+                                        @rx.Status
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    @rx.DateIssued.ToString("dd MMM yyyy")
+                                </td>
+                                <td>
+                                    <a asp-controller="Prescription"
+                                       asp-action="Detail"
+                                       asp-route-id="@rx.PrescriptionID"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
