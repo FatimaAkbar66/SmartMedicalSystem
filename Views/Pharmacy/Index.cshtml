@@ -1,0 +1,236 @@
+﻿@model SmartMedicalSystem.Models.ViewModels.PharmacyDashboardViewModel
+@{
+    ViewData["Title"] = "Pharmacy Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-bag-heart me-2"></i>
+            Pharmacy Dashboard
+        </h1>
+        <p class="page-subtitle">
+            @DateTime.Now.ToString("dddd, MMMM dd yyyy")
+        </p>
+    </div>
+    <a asp-action="Inventory"
+       class="btn btn-outline-primary">
+        <i class="bi bi-boxes me-2"></i>
+        View Inventory
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card stat-purple">
+            <div class="stat-number">
+                @Model.PendingPrescriptions.Count
+            </div>
+            <div class="stat-label">
+                Pending Prescriptions
+            </div>
+            <i class="bi bi-journal-medical stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-green">
+            <div class="stat-number">
+                @Model.DispensedToday
+            </div>
+            <div class="stat-label">Dispensed Today</div>
+            <i class="bi bi-check-circle stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-red">
+            <div class="stat-number">
+                @Model.LowStockMedicines.Count
+            </div>
+            <div class="stat-label">Low Stock Items</div>
+            <i class="bi bi-exclamation-triangle stat-icon">
+            </i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-amber">
+            <div class="stat-number">
+                @Model.ExpiringMedicines.Count
+            </div>
+            <div class="stat-label">Expiring Soon</div>
+            <i class="bi bi-calendar-x stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Pending Prescriptions -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-journal-medical
+                me-2 text-purple"></i>
+                Pending Prescriptions
+            </div>
+            @if (!Model.PendingPrescriptions.Any())
+            {
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="bi bi-check-circle-fill text-success
+                    d-block mb-2"
+                       style="font-size:2.5rem;"></i>
+                    All prescriptions dispensed!
+                </div>
+            }
+            else
+            {
+                <div class="card-body p-0">
+                    @foreach (var rx in Model.PendingPrescriptions)
+                    {
+                        <div class="p-3 border-bottom">
+                            <div class="row g-2 align-items-center">
+
+                                <!-- Rx Info -->
+                                <div class="col-md-4">
+                                    <code class="d-block fw-600">
+                                        @rx.PrescriptionCode
+                                    </code>
+                                    <div class="fw-600 small">
+                                        @rx.Patient?.User?.Name
+                                    </div>
+                                    <div class="text-muted"
+                                         style="font-size:.75rem;">
+                                        Dr. @rx.Doctor?.User?.Name
+                                    </div>
+                                </div>
+
+                                <!-- Medicines -->
+                                <div class="col-md-4">
+                                    <div class="text-muted"
+                                         style="font-size:.72rem;">
+                                        Medications:
+                                    </div>
+                                    @foreach (var item in rx.Items.Take(3))
+                                    {
+                                        <span class="badge me-1"
+                                              style="background:#f0e6ff;
+                                            color:#4b0082;">
+                                            @item.Medicine?.GenericName
+                                            (@item.Dosage mg)
+                                        </span>
+                                    }
+                                </div>
+
+                                <!-- Risk + Alerts -->
+                                <div class="col-md-2">
+                                    <span class="risk-badge d-block mb-1
+                                        risk-@rx.AIRiskLevel.ToLower()">
+                                        @rx.AIRiskLevel Risk
+                                    </span>
+                                    @if (rx.HasAlerts)
+                                    {
+                                        <span class="badge bg-danger">
+                                            ⚠ @rx.ValidationAlerts.Count
+                                            alerts
+                                        </span>
+                                    }
+                                </div>
+
+                                <!-- Dispense Button -->
+                                <div class="col-md-2 text-end">
+                                    <form asp-action="Dispense"
+                                          method="post"
+                                          onsubmit="return confirm(
+                                        'Confirm dispensing this
+                                        prescription?')">
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@rx.PrescriptionID" />
+                                        <button type="submit"
+                                                class="btn btn-sm
+                                            btn-success w-100">
+                                            <i class="bi bi-check2-circle
+                                            me-1"></i>
+                                            Dispense
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right: Alerts -->
+    <div class="col-xl-4">
+
+        <!-- Low Stock -->
+        <div class="card mb-3">
+            <div class="card-header text-danger">
+                <i class="bi bi-exclamation-triangle-fill
+                me-2"></i>
+                Low Stock Alerts
+            </div>
+            <div style="max-height:220px;overflow-y:auto;">
+                @if (!Model.LowStockMedicines.Any())
+                {
+                    <div class="text-center py-3 text-muted small">
+                        All stock levels are adequate
+                    </div>
+                }
+                @foreach (var med in Model.LowStockMedicines)
+                {
+                    <div class="d-flex justify-content-between
+                        align-items-center p-3
+                        border-bottom">
+                        <div>
+                            <div class="fw-600 small">
+                                @med.GenericName
+                            </div>
+                            <div class="text-muted"
+                                 style="font-size:.72rem;">
+                                Reorder at @med.ReorderLevel
+                            </div>
+                        </div>
+                        <span class="badge bg-danger">
+                            @med.StockQuantity left
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Expiring Soon -->
+        <div class="card">
+            <div class="card-header text-warning">
+                <i class="bi bi-calendar-x me-2"></i>
+                Expiring Within 30 Days
+            </div>
+            <div style="max-height:220px;overflow-y:auto;">
+                @if (!Model.ExpiringMedicines.Any())
+                {
+                    <div class="text-center py-3 text-muted small">
+                        No medicines expiring soon
+                    </div>
+                }
+                @foreach (var med in Model.ExpiringMedicines)
+                {
+                    <div class="d-flex justify-content-between
+                        align-items-center p-3
+                        border-bottom">
+                        <div class="fw-600 small">
+                            @med.GenericName
+                        </div>
+                        <span class="badge bg-warning text-dark">
+                            @med.ExpiryDate?.ToString("dd MMM")
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
