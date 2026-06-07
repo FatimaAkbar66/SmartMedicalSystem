@@ -1,0 +1,82 @@
+﻿@model SmartMedicalSystem.Models.Entities.Allergy
+@{
+    ViewData["Title"] = "Add Allergy";
+}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-plus-circle me-2"></i>
+        Add Allergy
+    </h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle-fill
+                me-2 text-danger"></i>
+                Document Allergy
+            </div>
+            <div class="card-body">
+                <form asp-action="AddAllergy" method="post">
+                    <input type="hidden"
+                           name="PatientID"
+                           value="@ViewBag.PatientId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Allergen Name
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input name="Allergen"
+                               class="form-control"
+                               placeholder="e.g. Penicillin, Sulfa, Latex"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Severity
+                            <span class="text-danger">*</span>
+                        </label>
+                        <select name="Severity" class="form-select">
+                            <option value="Mild">
+                                Mild — Minor reaction
+                            </option>
+                            <option value="Moderate">
+                                Moderate — Significant reaction
+                            </option>
+                            <option value="Severe">
+                                Severe — Life-threatening / Anaphylaxis
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            Known Reaction
+                        </label>
+                        <textarea name="Reaction"
+                                  class="form-control"
+                                  rows="2"
+                                  placeholder="e.g. Skin rash, Anaphylaxis, Hives">
+                </textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit"
+                                class="btn btn-danger flex-fill">
+                            <i class="bi bi-save me-2"></i>
+                            Save Allergy
+                        </button>
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
