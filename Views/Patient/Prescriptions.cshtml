@@ -1,0 +1,162 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.Prescription>
+@{
+    ViewData["Title"] = "My Prescriptions";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-journal-medical me-2"></i>
+            My Prescriptions
+        </h1>
+        <p class="page-subtitle">
+            @Model.Count prescription(s) on record
+        </p>
+    </div>
+    <a asp-action="Index"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>
+        Dashboard
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-journal-x d-block mb-3"
+               style="font-size:3rem;"></i>
+            <h5>No prescriptions yet</h5>
+            <p>Your doctor will add prescriptions here</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var rx in Model)
+        {
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3
+                            align-items-center">
+
+                            <!-- Rx Code + Date -->
+                            <div class="col-md-2">
+                                <code class="d-block fw-600">
+                                    @rx.PrescriptionCode
+                                </code>
+                                <small class="text-muted">
+                                    @rx.DateIssued
+                                    .ToString("dd MMM yyyy")
+                                </small>
+                            </div>
+
+                            <!-- Doctor -->
+                            <div class="col-md-2">
+                                <div class="text-muted"
+                                     style="font-size:.72rem;">
+                                    Doctor
+                                </div>
+                                <div class="fw-600 small">
+                                    Dr. @rx.Doctor?.User?.Name
+                                </div>
+                                <div class="text-muted"
+                                     style="font-size:.72rem;">
+                                    @rx.Doctor?.Specialization
+                                </div>
+                            </div>
+
+                            <!-- Diagnosis -->
+                            <div class="col-md-3">
+                                <div class="text-muted"
+                                     style="font-size:.72rem;">
+                                    Diagnosis
+                                </div>
+                                <div class="small">
+                                    @rx.Diagnosis
+                                </div>
+                            </div>
+
+                            <!-- Medications -->
+                            <div class="col-md-2">
+                                <div class="text-muted"
+                                     style="font-size:.72rem;">
+                                    Medications
+                                </div>
+                                @foreach (var item in
+                                                        rx.Items.Take(3))
+                                {
+                                    <span class="badge me-1"
+                                          style="background:
+                                        #f0e6ff;
+                                        color:#4b0082;">
+                                        @item.Medicine
+                                        ?.GenericName
+                                    </span>
+                                }
+                                @if (rx.Items.Count > 3)
+                                {
+                                    <span class="badge
+                                        bg-secondary">
+                                        +@(rx.Items.Count - 3)
+                                        more
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Risk + Status -->
+                            <div class="col-md-2">
+                                <div class="d-flex
+                                    flex-column gap-1">
+                                    <span class="risk-badge
+                                        risk-@rx.AIRiskLevel
+                                        .ToLower()">
+                                        <i class="bi bi-cpu
+                                        me-1"></i>
+                                        @rx.AIRiskLevel Risk
+                                    </span>
+                                    <span class="badge bg-@(
+                                          rx.Status == "Active"
+                                              ? "success"
+                                              : rx.Status ==
+                                                "Dispensed"
+                                              ? "info"
+                                              : "secondary")">
+                                        @rx.Status
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Alerts -->
+                            <div class="col-md-1 text-center">
+                                @if (rx.ValidationAlerts.Any())
+                                {
+                                    <span class="badge
+                                        bg-danger"
+                                          title="Safety Alerts">
+                                        <i class="bi
+                                            bi-exclamation">
+                                        </i>
+                                        @rx.ValidationAlerts
+                                        .Count
+                                    </span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-shield-check
+                                        text-success"
+                                       title="No alerts"
+                                       style="font-size:1.2rem;">
+                                    </i>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
