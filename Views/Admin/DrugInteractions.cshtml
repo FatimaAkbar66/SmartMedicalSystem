@@ -1,0 +1,94 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.DrugInteraction>
+@{
+    ViewData["Title"] = "Drug Interactions";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-exclamation-diamond me-2"></i>
+            Drug Interactions Database
+        </h1>
+        <p class="page-subtitle">
+            @Model.Count known drug interactions
+        </p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    @foreach (var sev in new[]
+        {
+        ("Severe",   "danger",  "bi-x-circle-fill"),
+        ("Moderate", "warning", "bi-exclamation-circle"),
+        ("Mild",     "info",    "bi-info-circle"),
+        })
+    {
+        var count = Model.Count(m => m.Severity == sev.Item1);
+        <div class="col-md-4">
+            <div class="card text-center py-3">
+                <i class="bi @sev.Item3 text-@sev.Item2
+                                 d-block mb-1"
+                   style="font-size:1.8rem;"></i>
+                <div class="fw-700 fs-4">@count</div>
+                <div class="text-muted small">
+                    @sev.Item1 Interactions
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Interactions Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Drug 1</th>
+                    <th>Drug 2</th>
+                    <th>Severity</th>
+                    <th>Description</th>
+                    <th>Clinical Effect</th>
+                    <th>Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in Model)
+                {
+                    <tr class="@(
+                        i.Severity == "Severe"
+                            ? "table-danger"
+                            : i.Severity == "Moderate"
+                            ? "table-warning" : "")">
+                        <td class="fw-600 small">
+                            @i.Drug1?.GenericName
+                        </td>
+                        <td class="fw-600 small">
+                            @i.Drug2?.GenericName
+                        </td>
+                        <td>
+                            <span class="badge bg-@(
+                                  i.Severity == "Severe"
+                                      ? "danger"
+                                      : i.Severity == "Moderate"
+                                      ? "warning"
+                                      : "info") text-@(
+                                  i.Severity == "Moderate"
+                                      ? "dark" : "")">
+                                @i.Severity
+                            </span>
+                        </td>
+                        <td class="small">@i.Description</td>
+                        <td class="small text-muted">
+                            @i.ClinicalEffect
+                        </td>
+                        <td class="small text-muted">
+                            @i.ManagementAdvice
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

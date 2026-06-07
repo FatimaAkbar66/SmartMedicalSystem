@@ -1,0 +1,183 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.User>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-people-fill me-2"></i>
+            User Management
+        </h1>
+        <p class="page-subtitle">
+            @Model.Count total users registered
+        </p>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input type="text"
+                       id="userSearch"
+                       class="form-control"
+                       placeholder="Search by name or email..."
+                       oninput="filterUsers()" />
+            </div>
+            <div class="col-md-3">
+                <select id="roleFilter"
+                        class="form-select"
+                        onchange="filterUsers()">
+                    <option value="">All Roles</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Doctor">Doctor</option>
+                    <option value="Patient">Patient</option>
+                    <option value="Pharmacist">
+                        Pharmacist
+                    </option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0"
+               id="usersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Registered</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr data-role="@user.Role"
+                        data-search="@user.Name @user.Email">
+                        <td>
+                            <div class="d-flex
+                                        align-items-center
+                                        gap-2">
+                                <div style="width:36px;
+                                            height:36px;
+                                            border-radius:50%;
+                                            background:linear-gradient(
+                                                135deg,
+                                                #4b0082,#7b2fbe);
+                                            display:flex;
+                                            align-items:center;
+                                            justify-content:center;
+                                            color:white;
+                                            font-weight:700;
+                                            font-size:.85rem;
+                                            flex-shrink:0;">
+                                    @user.Name.Substring(0, 1)
+                                    .ToUpper()
+                                </div>
+                                <span class="fw-600 small">
+                                    @user.Name
+                                </span>
+                            </div>
+                        </td>
+                        <td class="small text-muted">
+                            @user.Email
+                        </td>
+                        <td>
+                            <span class="badge bg-@(
+                                  user.Role == "Admin"
+                                      ? "purple" :
+                                  user.Role == "Doctor"
+                                      ? "primary" :
+                                  user.Role == "Patient"
+                                      ? "success" :
+                                  "warning") text-@(
+                                  user.Role == "Pharmacist"
+                                      ? "dark" : "")"
+                                  style="@(user.Role == "Admin"
+                                                                  ? "background:#4b0082;" : "")">
+                                @user.Role
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-@(
+                                  user.IsActive
+                                      ? "success" : "danger")">
+                                @(user.IsActive
+                                                            ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="text-muted small">
+                            @user.CreatedAt.ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            @if (user.Role != "Admin")
+                            {
+                                <form asp-action="ToggleUser"
+                                      method="post"
+                                      style="display:inline;">
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@user.UserID" />
+                                    <button type="submit"
+                                            class="btn btn-sm
+                                                       btn-@(user.IsActive
+                                                                                               ? "outline-danger"
+                                                                                               : "outline-success")"
+                                            onclick="return confirm(
+                                                    'Toggle user status?')">
+                                        <i class="bi bi-@(
+                                           user.IsActive
+                                               ? "person-dash"
+                                               : "person-check")
+                                                   me-1"></i>
+                                        @(user.IsActive
+                                                                        ? "Deactivate"
+                                                                        : "Activate")
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">
+                                    Protected
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterUsers() {
+            const search = document.getElementById('userSearch')
+                .value.toLowerCase();
+            const role   = document.getElementById('roleFilter')
+                .value;
+
+            document.querySelectorAll(
+                '#usersTable tbody tr[data-role]')
+                .forEach(row => {
+                    const matchSearch = !search ||
+                        row.dataset.search.toLowerCase()
+                           .includes(search);
+                    const matchRole = !role ||
+                        row.dataset.role === role;
+                    row.style.display =
+                        matchSearch && matchRole ? '' : 'none';
+                });
+        }
+    </script>
+}
