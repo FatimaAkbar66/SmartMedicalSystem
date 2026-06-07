@@ -1,0 +1,752 @@
+﻿@model SmartMedicalSystem.Models.ViewModels.CreatePrescriptionViewModel
+@{
+    ViewData["Title"] = "New Prescription";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-plus-circle-fill me-2"></i>
+            New Prescription
+        </h1>
+        <p class="page-subtitle">
+            All prescriptions are validated by the
+            AI Safety Engine in real-time
+        </p>
+    </div>
+    <a asp-controller="Doctor"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+</div>
+
+@if (TempData["ValidationFailed"] != null)
+{
+    <div class="alert alert-danger d-flex
+        align-items-center gap-2 mb-4">
+        <i class="bi bi-shield-x fs-5"></i>
+        <span>@TempData["ValidationFailed"]</span>
+    </div>
+}
+
+<div class="row g-4">
+
+    <div class="col-xl-8">
+        <form id="prescriptionForm"
+              asp-controller="Prescription"
+              asp-action="Create"
+              method="post">
+
+            <input type="hidden"
+                   id="medicinesJsonInput"
+                   name="medicinesJson"
+                   value="[]" />
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-person-circle
+                    me-2 text-purple"></i>
+                    Patient Selection
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">
+                                Select Patient
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select name="PatientID"
+                                    id="patientSelect"
+                                    class="form-select"
+                                    onchange="onPatientChange(this.value)"
+                                    required>
+                                <option value="">
+                                    — Choose a patient —
+                                </option>
+                                @foreach (var p in Model.AvailablePatients)
+                                {
+                                    var age = p.DateOfBirth.HasValue
+                                        ? (int)((DateTime.Today -
+                                           p.DateOfBirth.Value)
+                                           .TotalDays / 365.25)
+                                        : 0;
+                                    <option value="@p.PatientID"
+                                            data-age="@age"
+                                            data-blood="@p.BloodGroup"
+                                            data-gender="@p.Gender"
+                                            data-weight="@p.Weight"
+                                            selected="@(Model.PatientID == p.PatientID)">
+                                        @p.User?.Name
+                                        (@p.Gender, @p.BloodGroup,
+                                        @(age > 0 ? age + "yrs" : ""))
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex
+                            align-items-end">
+                            <a id="viewProfileBtn"
+                               href="#"
+                               class="btn btn-outline-primary
+                                w-100 disabled"
+                               target="_blank">
+                                <i class="bi bi-person-badge me-1"></i>
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="patientInfoStrip"
+                         class="mt-3 d-none">
+                        <div class="p-3 rounded d-flex
+                            flex-wrap gap-2 align-items-center"
+                             style="background:#f0f4ff;
+                            border:1px solid #c7d7ff;">
+                            <span class="badge"
+                                  style="background:#e0e7ff;
+                                color:#3730a3;">
+                                <i class="bi bi-person me-1"></i>
+                                <span id="strip-gender"></span>
+                            </span>
+                            <span class="badge"
+                                  style="background:#fce7f3;
+                                color:#9d174d;">
+                                <i class="bi bi-droplet-fill me-1"></i>
+                                <span id="strip-blood"></span>
+                            </span>
+                            <span class="badge"
+                                  style="background:#ecfdf5;
+                                color:#065f46;">
+                                <i class="bi bi-speedometer me-1"></i>
+                                <span id="strip-weight"></span> kg
+                            </span>
+                            <span class="badge"
+                                  style="background:#fff7ed;
+                                color:#9a3412;">
+                                <i class="bi bi-calendar me-1"></i>
+                                <span id="strip-age"></span> yrs
+                            </span>
+                            <span id="strip-allergies"
+                                  class="badge bg-danger d-none">
+                                ⚠ Has Allergies
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-clipboard-pulse
+                    me-2 text-purple"></i>
+                    Diagnosis & Clinical Notes
+                </div>
+                <div class="card-body row g-3">
+                    <div class="col-12">
+                        <label class="form-label">
+                            Diagnosis
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input name="Diagnosis"
+                               id="diagnosisInput"
+                               class="form-control"
+                               placeholder="e.g. Type 2 Diabetes with Hypertension"
+                               required />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">
+                            Physician Notes
+                            <span class="text-muted fw-400">
+                                (optional)
+                            </span>
+                        </label>
+                        <textarea name="Notes"
+                                  class="form-control"
+                                  rows="2"
+                                  placeholder="Additional notes or instructions...">
+                </textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex
+                    justify-content-between
+                    align-items-center">
+                    <span>
+                        <i class="bi bi-capsule
+                        me-2 text-purple"></i>
+                        Prescribed Medications
+                    </span>
+                    <button type="button"
+                            class="btn btn-sm btn-success"
+                            onclick="addMedicineRow()">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Add Medicine
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    <div id="medicineRowsContainer"></div>
+
+                    <div id="emptyMedState"
+                         class="text-center py-4 text-muted">
+                        <i class="bi bi-capsule d-block mb-2"
+                           style="font-size:2.5rem;opacity:.3;"></i>
+                        <p class="mb-0 small">
+                            Click <strong>Add Medicine</strong>
+                            to add medications to this prescription
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <button type="button"
+                            class="btn btn-info w-100 py-2 fw-600"
+                            onclick="runValidation()">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Run AI Safety Validation
+                        <span id="validatingSpinner"
+                              class="ms-2 d-none">
+                            <i class="bi bi-arrow-repeat spin"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit"
+                            id="finalizeBtn"
+                            class="btn btn-primary w-100 py-2 fw-600"
+                            onclick="prepareSubmit()">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Finalize Prescription
+                    </button>
+                </div>
+            </div>
+
+            <div id="overrideSection" class="d-none mt-3">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Critical alerts detected.</strong>
+                    Provide clinical justification to override:
+                </div>
+                <textarea name="overrideReason"
+                          id="overrideReason"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Enter clinical justification for override...">
+        </textarea>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="sticky-panel">
+
+            <div class="card mb-3" id="riskCard"
+                 style="display:none;">
+                <div class="card-header"
+                     style="background:linear-gradient(135deg,
+                    #2d0050,#4b0082);
+                    color:white;">
+                    <i class="bi bi-cpu me-2"></i>
+                    ML.NET Risk Assessment
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="risk-circle" id="riskCircle">
+                        —
+                    </div>
+                    <h4 class="fw-700 mt-2"
+                        id="riskLevelText">
+                        —
+                    </h4>
+                    <div class="progress my-2"
+                         style="height:8px;">
+                        <div class="progress-bar"
+                             id="riskBar"
+                             style="width:0%;
+                            transition:width .8s;">
+                        </div>
+                    </div>
+                    <p class="text-muted small"
+                       id="riskSummaryText"></p>
+                    <div id="riskFactorsDiv"
+                         class="text-start mt-2"></div>
+                    <div id="riskRecsDiv"
+                         class="text-start mt-2"></div>
+                </div>
+            </div>
+
+            <div class="card" id="validationCard">
+                <div class="card-header">
+                    <i class="bi bi-shield-exclamation
+                    me-2 text-danger"></i>
+                    Safety Validation
+                </div>
+
+                <div class="card-body text-center py-5"
+                     id="validationPlaceholder">
+                    <i class="bi bi-shield d-block mb-3"
+                       style="font-size:3rem;
+                    color:#cbd5e1;"></i>
+                    <p class="text-muted small mb-0">
+                        Select patient + add medicines,<br />
+                        then click
+                        <strong>Run AI Safety Validation</strong>
+                    </p>
+                </div>
+
+                <div id="validationResults" class="d-none">
+                    <div class="p-3 border-bottom"
+                         id="validationBanner"></div>
+                    <div id="alertsContainer"
+                         style="max-height:400px;
+                        overflow-y:auto;">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div><template id="medRowTemplate">
+<div class="med-row" id="medRow_{ID}">
+    <div class="row g-2 align-items-end">
+
+        <div class="col-md-5">
+            <label class="form-label small fw-600">
+                Medicine
+                <span class="text-danger">*</span>
+            </label>
+            <select class="form-select form-select-sm
+                med-select"
+                    onchange="onMedChange(this,{ID})"
+                    required>
+                <option value="">— Select —</option>
+                MEDICINE_OPTIONS
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label small fw-600">
+                Dose (mg)
+            </label>
+            <input type="number"
+                   class="form-control form-select-sm
+            med-dose"
+                   id="dose_{ID}"
+                   min="0.01"
+                   step="0.01"
+                   placeholder="mg" />
+            <small class="text-muted"
+                   id="doseHint_{ID}"
+                   style="font-size:.7rem;"></small>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label small fw-600">
+                Frequency
+            </label>
+            <select class="form-select form-select-sm
+                med-freq">
+                <option>Once daily</option>
+                <option>Twice daily</option>
+                <option>Three times daily</option>
+                <option>Four times daily</option>
+                <option>Every 8 hours</option>
+                <option>Every 12 hours</option>
+                <option>At bedtime</option>
+                <option>As needed</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label small fw-600">
+                Days
+            </label>
+            <input type="number"
+                   class="form-control form-select-sm
+            med-days"
+                   value="7"
+                   min="1"
+                   max="365" />
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label small fw-600">
+                Instructions
+            </label>
+            <input type="text"
+                   class="form-control form-select-sm
+            med-instructions"
+                   placeholder="e.g. Take after meals" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label small fw-600">
+                Route
+            </label>
+            <select class="form-select form-select-sm
+                med-route">
+                <option>Oral</option>
+                <option>IV</option>
+                <option>IM</option>
+                <option>Topical</option>
+                <option>Sublingual</option>
+                <option>Inhalation</option>
+                <option>Rectal</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 text-end">
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="removeMedRow({ID})">
+                <i class="bi bi-trash me-1"></i>
+                Remove
+            </button>
+        </div>
+
+    </div>
+</div>
+</template>
+
+@section Scripts {
+    <script>
+        // ── Medicine data from server ─────────────────
+        @{
+                    // Handle the evaluation and fallback completely in C# first
+                    System.Collections.IEnumerable medicinesList = Array.Empty<object>();
+                    if (Model.AvailableMedicines != null)
+                    {
+                                medicinesList = Model.AvailableMedicines.Select(m => new
+                                {
+                                            id = m.MedicineID,
+                                            name = m.GenericName,
+                                            brand = m.BrandNames != null ? m.BrandNames.Split(',', StringSplitOptions.None).FirstOrDefault() ?? "" : "",
+                                            category = m.Category,
+                                            maxDose = m.MaxDosageMg,
+                                            minDose = m.MinDosageMg,
+                                            ingredient = m.ActiveIngredient
+                                }).ToList(); // Forcing it to a list avoids any deferred execution type issues
+                    }
+        }
+
+        const medicineData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(medicinesList));
+
+        // Build <option> HTML for medicine selects
+        const medOptionsHtml = medicineData.map(m =>
+            `<option value="${m.id}"
+                     data-max="${m.maxDose}"
+                     data-min="${m.minDose}"
+                     data-cat="${m.category}"
+                     data-ing="${m.ingredient}">
+                ${m.name} (${m.brand})
+             </option>`
+        ).join('');
+
+        let rowCounter = 0;
+
+        // ── Add a new medicine row ────────────────────
+        function addMedicineRow() {
+            rowCounter++;
+            document.getElementById('emptyMedState')
+                .classList.add('d-none');
+
+            const template = document.getElementById(
+                'medRowTemplate').innerHTML
+                .replaceAll('{ID}', rowCounter)
+                .replace('MEDICINE_OPTIONS', medOptionsHtml);
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = template;
+
+            document.getElementById('medicineRowsContainer')
+                .appendChild(wrapper.firstElementChild);
+        }
+
+        // ── Remove a medicine row ─────────────────────
+        function removeMedRow(id) {
+            const row = document.getElementById(`medRow_${id}`);
+            if (row) row.remove();
+
+            const container = document.getElementById(
+                'medicineRowsContainer');
+            if (!container.querySelector('.med-row'))
+                document.getElementById('emptyMedState')
+                    .classList.remove('d-none');
+        }
+
+        // ── Medicine selected → fill dose hint ────────
+        function onMedChange(sel, id) {
+            const opt  = sel.options[sel.selectedIndex];
+            const max  = opt.dataset.max;
+            const min  = opt.dataset.min;
+            const hint = document.getElementById(`doseHint_${id}`);
+            const dose = document.getElementById(`dose_${id}`);
+
+            if (max && min && max !== "null" && min !== "null") {
+                hint.textContent = `Range: ${min}–${max} mg`;
+                if (!dose.value) dose.value = min;
+            } else {
+                hint.textContent = '';
+            }
+        }
+
+        // ── Patient changed → update strip ───────────
+        function onPatientChange(pid) {
+            const strip = document.getElementById('patientInfoStrip');
+            const btn   = document.getElementById('viewProfileBtn');
+
+            if (!pid) {
+                strip.classList.add('d-none');
+                btn.classList.add('disabled');
+                btn.href = '#';
+                return;
+            }
+
+            const opt = document.querySelector(
+                `#patientSelect option[value="${pid}"]`);
+
+            document.getElementById('strip-gender').textContent =
+                opt?.dataset.gender || '—';
+            document.getElementById('strip-blood').textContent =
+                opt?.dataset.blood  || '—';
+            document.getElementById('strip-weight').textContent =
+                opt?.dataset.weight || '—';
+            document.getElementById('strip-age').textContent =
+                opt?.dataset.age    || '—';
+
+            strip.classList.remove('d-none');
+            btn.href = `/Doctor/PatientProfile/${pid}`;
+            btn.classList.remove('disabled');
+        }
+
+        // ── Collect medicines from rows ───────────────
+        function collectMedicines() {
+            return Array.from(document.querySelectorAll('.med-row'))
+                .map(row => ({
+                    MedicineID:   parseInt(
+                        row.querySelector('.med-select').value) || 0,
+                    Dosage:       parseFloat(
+                        row.querySelector('.med-dose').value)  || 0,
+                    Frequency:    row.querySelector(
+                        '.med-freq').value,
+                    DurationDays: parseInt(
+                        row.querySelector('.med-days').value)  || 7,
+                    Instructions: row.querySelector(
+                        '.med-instructions').value,
+                    Route:        row.querySelector(
+                        '.med-route').value
+                }))
+                .filter(i => i.MedicineID > 0);
+        }
+
+        // ── RUN VALIDATION (AJAX call) ────────────────
+        async function runValidation() {
+            const pid = document.getElementById(
+                'patientSelect').value;
+
+            if (!pid) {
+                alert('Please select a patient first.');
+                return;
+            }
+
+            const items = collectMedicines();
+            if (!items.length) {
+                alert('Please add at least one medication.');
+                return;
+            }
+
+            // Show spinner
+            document.getElementById('validatingSpinner')
+                .classList.remove('d-none');
+            document.getElementById('validationPlaceholder')
+                .innerHTML = `
+                <div class="py-5 text-center">
+                    <i class="bi bi-arrow-repeat spin d-block mb-3"
+                       style="font-size:2.5rem;color:#4b0082;"></i>
+                    <p class="text-muted small">
+                        Running 4-layer AI validation...<br/>
+                        <small>Allergy · Interaction · Dosage · Duplicate</small>
+                    </p>
+                </div>`;
+            document.getElementById('validationPlaceholder')
+                .classList.remove('d-none');
+            document.getElementById('validationResults')
+                .classList.add('d-none');
+
+            try {
+                const resp = await fetch('/Prescription/Validate', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        PatientId: parseInt(pid),
+                        Items:     items
+                    })
+                });
+
+                const data = await resp.json();
+                renderValidation(data);
+
+            } catch (err) {
+                document.getElementById('validationPlaceholder')
+                    .innerHTML = `
+                    <div class="alert alert-danger m-3">
+                        Validation failed. Please try again.
+                    </div>`;
+            }
+
+            document.getElementById('validatingSpinner')
+                .classList.add('d-none');
+        }
+
+        // ── RENDER validation results ─────────────────
+        function renderValidation(data) {
+            document.getElementById('validationPlaceholder')
+                .classList.add('d-none');
+            document.getElementById('validationResults')
+                .classList.remove('d-none');
+
+            // ── Summary Banner ──────────────────────────
+            const isOk    = data.isValid;
+            const hasCrit = data.hasCriticalAlerts;
+            const bannerClass = isOk
+                ? 'alert-success' : hasCrit
+                ? 'alert-danger'  : 'alert-warning';
+            const bannerIcon  = isOk
+                ? 'bi-shield-check'
+                : 'bi-shield-x';
+
+            document.getElementById('validationBanner')
+                .innerHTML = `
+                <div class="alert ${bannerClass} mb-0 py-2 small">
+                    <i class="bi ${bannerIcon} me-2"></i>
+                    ${data.message}
+                </div>`;
+
+            // Show override section if critical
+            const overSec = document.getElementById(
+                'overrideSection');
+            if (hasCrit) overSec.classList.remove('d-none');
+            else         overSec.classList.add('d-none');
+
+            // ── Alerts List ─────────────────────────────
+            const container = document.getElementById(
+                'alertsContainer');
+
+            if (!data.alerts || !data.alerts.length) {
+                container.innerHTML = `
+                <div class="text-center py-4 text-success">
+                    <i class="bi bi-check-circle-fill d-block mb-2"
+                       style="font-size:2rem;"></i>
+                    All safety checks passed!
+                </div>`;
+            } else {
+                container.innerHTML = data.alerts.map(a => `
+                <div class="p-3 border-bottom
+                     alert-left-${a.severity.toLowerCase()}">
+                    <div class="d-flex gap-2 mb-1">
+                        <span class="badge bg-${a.cssClass}
+                              align-self-start">
+                            <i class="bi ${a.icon} me-1"></i>
+                            ${a.type}
+                        </span>
+                        <span class="badge bg-${
+                            a.severity==='Critical' ? 'danger' :
+                            a.severity==='Warning'  ? 'warning' :
+                            'info'} text-${
+                            a.severity==='Warning'  ? 'dark' : ''}">
+                            ${a.severity}
+                        </span>
+                    </div>
+                    <p class="mb-1 small">${a.message}</p>
+                    ${a.suggestedAction
+                        ? `<p class="mb-0 text-muted"
+                              style="font-size:.76rem;">
+                               <i class="bi bi-lightbulb
+                                          text-warning me-1"></i>
+                               ${a.suggestedAction}
+                           </p>`
+                        : ''}
+                </div>`).join('');
+            }
+
+            // ── AI Risk Card ────────────────────────────
+            if (data.riskAssessment) {
+                const r    = data.riskAssessment;
+                const pct  = Math.round(r.riskScore * 100);
+                const card = document.getElementById('riskCard');
+                card.style.display = '';
+
+                const circle = document.getElementById('riskCircle');
+                circle.className = `risk-circle ${r.riskColor}`;
+                circle.textContent = pct + '%';
+
+                document.getElementById('riskLevelText')
+                    .textContent = r.riskLevel + ' Risk';
+                document.getElementById('riskLevelText')
+                    .className = `fw-700 mt-2 text-${r.riskColor}`;
+
+                const bar = document.getElementById('riskBar');
+                bar.style.width = pct + '%';
+                bar.className = `progress-bar bg-${r.riskColor}`;
+
+                document.getElementById('riskSummaryText')
+                    .textContent = r.summary;
+
+                // Contributing factors
+                const facDiv = document.getElementById(
+                    'riskFactorsDiv');
+                if (r.contributingFactors?.length) {
+                    facDiv.innerHTML =
+                        '<p class="fw-600 small mb-1">Risk Factors</p>' +
+                        r.contributingFactors.map(f =>
+                            `<span class="badge me-1 mb-1"
+                                   style="background:#fee2e2;
+                                          color:#b91c1c;">
+                                 ${f}
+                             </span>`
+                        ).join('');
+                }
+
+                // Recommendations
+                const recDiv = document.getElementById(
+                    'riskRecsDiv');
+                if (r.recommendations?.length) {
+                    recDiv.innerHTML =
+                        '<p class="fw-600 small mb-1 mt-2">Recommendations</p>' +
+                        r.recommendations.map(rec =>
+                            `<div class="d-flex gap-1 mb-1">
+                                 <i class="bi bi-chevron-right
+                                            text-purple mt-1"
+                                    style="font-size:.7rem;
+                                           flex-shrink:0;"></i>
+                                 <span style="font-size:.78rem;">
+                                     ${rec}
+                                 </span>
+                             </div>`
+                        ).join('');
+                }
+            }
+        }
+
+        // ── Prepare form for submit ───────────────────
+        function prepareSubmit() {
+            const items = collectMedicines();
+            document.getElementById('medicinesJsonInput')
+                .value = JSON.stringify(items);
+        }
+
+        // ── Init: load patient if pre-selected ────────
+        window.addEventListener('DOMContentLoaded', () => {
+            const pid = document.getElementById(
+                'patientSelect').value;
+            if (pid) onPatientChange(pid);
+        });
+    </script>
+}
