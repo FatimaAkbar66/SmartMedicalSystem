@@ -1,0 +1,193 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.Patient>
+@{
+    ViewData["Title"] = "Patients";
+}
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-people-fill me-2"></i>Patient Registry
+        </h1>
+        <p class="page-subtitle">
+            @Model.Count patient(s) registered in the system
+        </p>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <form asp-action="Patients" method="get">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input name="search"
+                               value="@ViewBag.Search"
+                               class="form-control"
+                               placeholder="Search by name, email or blood group..." />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Search
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Patients"
+                       class="btn btn-outline-secondary w-100">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Patients Grid -->
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-people d-block mb-3"
+               style="font-size:3rem;"></i>
+            <h5>No patients found</h5>
+            <p>Try a different search term</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var patient in Model)
+        {
+            var age = patient.DateOfBirth.HasValue
+            ? (int)((DateTime.Today -
+            patient.DateOfBirth.Value).TotalDays / 365.25)
+            : 0;
+
+            var hasAllergies = patient.Allergies.Any();
+
+            <div class="col-xl-4 col-md-6">
+                <div class="card h-100 patient-card"
+                     style="transition:all .2s;cursor:pointer;"
+                     onmouseenter="this.style.transform='translateY(-3px)';
+                    this.style.boxShadow='0 8px 25px rgba(75,0,130,.15)'"
+                     onmouseleave="this.style.transform='';
+                    this.style.boxShadow=''">
+                    <div class="card-body">
+
+                        <!-- Patient Header -->
+                        <div class="d-flex align-items-center
+                            gap-3 mb-3">
+                            <div style="width:48px;height:48px;
+                                border-radius:50%;flex-shrink:0;
+                                background:linear-gradient(135deg,
+                                #4b0082,#7b2fbe);
+                                display:flex;align-items:center;
+                                justify-content:center;
+                                color:white;font-weight:700;
+                                font-size:1.1rem;">
+                                @patient.User?.Name.Substring(0, 1)
+                                .ToUpper()
+                            </div>
+                            <div>
+                                <h6 class="fw-700 mb-0">
+                                    @patient.User?.Name
+                                </h6>
+                                <small class="text-muted">
+                                    @patient.User?.Email
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Patient Info Pills -->
+                        <div class="d-flex flex-wrap gap-1 mb-3">
+                            <span class="badge"
+                                  style="background:#f0e6ff;
+                                color:#4b0082;">
+                                @patient.Gender
+                            </span>
+                            <span class="badge"
+                                  style="background:#e0f2fe;
+                                color:#0369a1;">
+                                @patient.BloodGroup
+                            </span>
+                            @if (age > 0)
+                            {
+                                <span class="badge"
+                                      style="background:#f0fdf4;
+                                    color:#065f46;">
+                                    @age yrs
+                                </span>
+                            }
+                            <span class="badge"
+                                  style="background:#fff7ed;
+                                color:#9a3412;">
+                                @patient.Weight kg
+                            </span>
+                        </div>
+
+                        <!-- Allergy Warning -->
+                        @if (hasAllergies)
+                        {
+                            <div class="d-flex align-items-center
+                                gap-1 mb-3 p-2 rounded"
+                                 style="background:#fef2f2;
+                                border:1px solid #fecaca;">
+                                <i class="bi bi-exclamation-triangle-fill
+                                text-danger small"></i>
+                                <span style="font-size:.75rem;
+                                    color:#991b1b;">
+                                    @patient.Allergies.Count allergy
+                                    record(s):
+                                    @string.Join(", ",
+                                    patient.Allergies
+                                    .Take(2)
+                                    .Select(a => a.Allergen))
+                                    @(patient.Allergies.Count > 2
+                                                            ? "..." : "")
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center
+                                gap-1 mb-3 p-2 rounded"
+                                 style="background:#f0fdf4;
+                                border:1px solid #bbf7d0;">
+                                <i class="bi bi-shield-check
+                                text-success small"></i>
+                                <span style="font-size:.75rem;
+                                    color:#065f46;">
+                                    No known allergies
+                                </span>
+                            </div>
+                        }
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2">
+                            <a asp-action="PatientProfile"
+                               asp-route-id="@patient.PatientID"
+                               class="btn btn-sm btn-primary flex-fill">
+                                <i class="bi bi-person-badge me-1"></i>
+                                View Profile
+                            </a>
+                            <a asp-controller="Prescription"
+                               asp-action="Create"
+                               asp-route-patientId="@patient.PatientID"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

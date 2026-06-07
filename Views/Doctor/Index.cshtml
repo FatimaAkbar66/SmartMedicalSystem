@@ -1,0 +1,261 @@
+﻿@model SmartMedicalSystem.Models.ViewModels.DoctorDashboardViewModel
+@{
+    ViewData["Title"] = "Doctor Dashboard";
+}
+
+<!-- ── PAGE HEADER ───────────────────────────── -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-speedometer2 me-2"></i>Doctor Dashboard
+        </h1>
+        <p class="page-subtitle">
+            Welcome, Dr. @Model.Doctor.User?.Name —
+            @DateTime.Now.ToString("dddd, MMMM dd yyyy")
+        </p>
+    </div>
+    <a asp-controller="Prescription"
+       asp-action="Create"
+       class="btn btn-primary px-4 py-2">
+        <i class="bi bi-plus-circle-fill me-2"></i>
+        New Prescription
+    </a>
+</div>
+
+<!-- ── STAT CARDS ────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card stat-purple">
+            <div class="stat-number">@Model.TotalPatients</div>
+            <div class="stat-label">Total Patients</div>
+            <i class="bi bi-people-fill stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card stat-green">
+            <div class="stat-number">@Model.PrescriptionsToday</div>
+            <div class="stat-label">Prescriptions Today</div>
+            <i class="bi bi-journal-medical stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card stat-amber">
+            <div class="stat-number">@Model.TotalAlerts</div>
+            <div class="stat-label">Safety Alerts</div>
+            <i class="bi bi-exclamation-triangle stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card stat-red">
+            <div class="stat-number">@Model.HighRiskCount</div>
+            <div class="stat-label">High Risk Cases</div>
+            <i class="bi bi-heart-pulse stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ── MAIN CONTENT ROW ──────────────────────── -->
+<div class="row g-4">
+
+    <!-- Recent Prescriptions Table -->
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between
+                        align-items-center">
+                <span>
+                    <i class="bi bi-journal-medical me-2 text-purple"></i>
+                    Recent Prescriptions
+                </span>
+                <a asp-controller="Prescription"
+                   asp-action="List"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Rx Code</th>
+                            <th>Patient</th>
+                            <th>Diagnosis</th>
+                            <th>AI Risk</th>
+                            <th>Alerts</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.RecentPrescriptions.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-x d-block mb-2"
+                                       style="font-size:2rem;"></i>
+                                    No prescriptions yet.
+                                    <a asp-controller="Prescription"
+                                       asp-action="Create">
+                                        Create your first one
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var rx in Model.RecentPrescriptions)
+                        {
+                            <tr>
+                                <td>
+                                    <code>@rx.PrescriptionCode</code>
+                                </td>
+                                <td class="fw-600">
+                                    @rx.Patient?.User?.Name
+                                </td>
+                                <td>
+                                    <span class="text-muted"
+                                          title="@rx.Diagnosis"
+                                          style="max-width:130px;
+                                                 display:inline-block;
+                                                 overflow:hidden;
+                                                 text-overflow:ellipsis;
+                                                 white-space:nowrap;">
+                                        @rx.Diagnosis
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="risk-badge
+                                          risk-@rx.AIRiskLevel.ToLower()">
+                                        <i class="bi bi-circle-fill"
+                                           style="font-size:.45rem;"></i>
+                                        @rx.AIRiskLevel
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (rx.ValidationAlerts.Any())
+                                    {
+                                        <span class="badge bg-danger">
+                                            @rx.ValidationAlerts.Count
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            Clear
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(
+                                          rx.Status == "Active" ? "success" :
+                                          rx.Status == "Dispensed" ? "info" :
+                                          "secondary")">
+                                        @rx.Status
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    @rx.DateIssued.ToString("dd MMM")
+                                </td>
+                                <td>
+                                    <a asp-controller="Prescription"
+                                       asp-action="Detail"
+                                       asp-route-id="@rx.PrescriptionID"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-xl-4">
+
+        <!-- Doctor Info Card -->
+        <div class="card mb-3">
+            <div class="card-body text-center py-4">
+                <div style="width:70px;height:70px;
+                            background:linear-gradient(135deg,#4b0082,#7b2fbe);
+                            border-radius:50%;display:flex;align-items:center;
+                            justify-content:center;font-size:1.8rem;
+                            color:white;margin:0 auto 1rem;">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <h5 class="fw-700 mb-1">
+                    Dr. @Model.Doctor.User?.Name
+                </h5>
+                <p class="text-muted small mb-2">
+                    @Model.Doctor.Specialization
+                </p>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge"
+                          style="background:#f0e6ff;color:#4b0082;">
+                        @Model.Doctor.Department
+                    </span>
+                    <span class="badge"
+                          style="background:#e0f2fe;color:#0369a1;">
+                        @Model.Doctor.ExperienceYears yrs exp
+                    </span>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-card-text me-1"></i>
+                    License: @Model.Doctor.LicenseNo
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Safety Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-shield-exclamation
+                           me-2 text-danger"></i>
+                Recent Safety Alerts
+            </div>
+            <div style="max-height:340px;overflow-y:auto;">
+                @if (!Model.RecentAlerts.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-shield-check d-block mb-2
+                                      text-success"
+                           style="font-size:2rem;"></i>
+                        No alerts recorded
+                    </div>
+                }
+                @foreach (var alert in Model.RecentAlerts)
+                {
+                    <div class="p-3 border-bottom
+                             alert-left-@alert.Severity.ToLower()">
+                        <div class="d-flex gap-2">
+                            <span class="badge mt-1 align-self-start bg-@(
+                                  alert.Severity == "Critical" ? "danger" :
+                                  alert.Severity == "Warning" ? "warning" :
+                                  "info") text-@(
+                                  alert.Severity == "Warning" ? "dark" : "")">
+                                @alert.AlertType
+                            </span>
+                            <div style="min-width:0;">
+                                <p class="mb-0 fw-600 small">
+                                    @alert.Prescription?
+                                    .Patient?.User?.Name
+                                </p>
+                                <p class="mb-0 text-muted"
+                                   style="font-size:.74rem;
+                                              overflow:hidden;
+                                              text-overflow:ellipsis;
+                                              white-space:nowrap;">
+                                    @(alert.Message.Length > 70
+                                                                    ? alert.Message.Substring(0, 70) + "…"
+                                                                    : alert.Message)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
