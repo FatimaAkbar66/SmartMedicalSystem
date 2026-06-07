@@ -1,0 +1,88 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.AuditLog>
+@{
+    ViewData["Title"] = "Audit Log";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-shield-check me-2"></i>
+            System Audit Log
+        </h1>
+        <p class="page-subtitle">
+            Last @Model.Count system activities
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7"
+                            class="text-center py-4 text-muted">
+                            No audit logs yet
+                        </td>
+                    </tr>
+                }
+                @{
+                    int n = 1;
+                }
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td class="text-muted small">
+                            @(n++)
+                        </td>
+                        <td class="small">
+                            @log.Timestamp
+                            .ToString("dd MMM yyyy HH:mm:ss")
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  style="background:#f0e6ff;
+                                color:#4b0082;">
+                                User #@log.UserID
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-@(
+                                  log.Action == "Login"
+                                      ? "success"
+                                  : log.Action.Contains(
+                                      "Prescription")
+                                      ? "primary"
+                                      : "secondary")">
+                                @log.Action
+                            </span>
+                        </td>
+                        <td class="small fw-600">@log.Entity</td>
+                        <td class="small text-muted">
+                            @(log.Details?.Length > 60
+                                                    ? log.Details.Substring(0, 60)
+                                                    + "…"
+                                                    : log.Details)
+                        </td>
+                        <td class="small text-muted">
+                            @(log.IPAddress ?? "—")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

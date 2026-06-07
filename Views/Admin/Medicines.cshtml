@@ -1,0 +1,149 @@
+﻿@model List<SmartMedicalSystem.Models.Entities.Medicine>
+@{
+    ViewData["Title"] = "Medicines Database";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-capsule me-2"></i>
+            Medicines Database
+        </h1>
+        <p class="page-subtitle">
+            @Model.Count medicines in the system
+        </p>
+    </div>
+    <a asp-action="AddMedicine"
+       class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>
+        Add Medicine
+    </a>
+</div>
+
+<!-- Search -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input type="text"
+                       id="medSearch"
+                       class="form-control"
+                       placeholder="Search medicines..."
+                       oninput="filterMeds()" />
+            </div>
+            <div class="col-md-3">
+                <select id="stockFilter"
+                        class="form-select"
+                        onchange="filterMeds()">
+                    <option value="">All Stock</option>
+                    <option value="low">Low Stock</option>
+                    <option value="ok">Adequate</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medicines Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0"
+               id="medsTable">
+            <thead>
+                <tr>
+                    <th>Generic Name</th>
+                    <th>Brand Names</th>
+                    <th>Category</th>
+                    <th>Dosage Range</th>
+                    <th>Age Group</th>
+                    <th>Stock</th>
+                    <th>Price</th>
+                    <th>Rx Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var med in Model)
+                {
+                    var isLow = med.StockQuantity
+                    <= med.ReorderLevel;
+                    <tr data-search="@med.GenericName
+                        @med.BrandNames
+                        @med.Category"
+                        data-stock="@(isLow ? "low" : "ok")">
+                        <td class="fw-600">
+                            @med.GenericName
+                        </td>
+                        <td class="text-muted small">
+                            @med.BrandNames
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  style="background:#f0e6ff;
+                                color:#4b0082;
+                                font-size:.72rem;">
+                                @med.Category
+                            </span>
+                        </td>
+                        <td class="small">
+                            @med.MinDosageMg –
+                            @med.MaxDosageMg mg
+                        </td>
+                        <td class="small">@med.AgeGroup</td>
+                        <td>
+                            <span class="badge bg-@(
+                                  isLow ? "danger" : "success")">
+                                @med.StockQuantity
+                            </span>
+                            @if (isLow)
+                            {
+                                <i class="bi bi-exclamation-triangle
+                                text-danger ms-1"
+                                   title="Low stock!"></i>
+                            }
+                        </td>
+                        <td class="small">
+                            Rs. @med.Price.ToString("F0")
+                        </td>
+                        <td>
+                            @if (med.RequiresPrescription)
+                            {
+                                <span class="badge bg-warning
+                                    text-dark">
+                                    Rx Only
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    OTC
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterMeds() {
+            const search = document.getElementById('medSearch')
+                .value.toLowerCase();
+            const stock  = document.getElementById('stockFilter')
+                .value;
+
+            document.querySelectorAll(
+                '#medsTable tbody tr[data-search]')
+                .forEach(row => {
+                    const ms = !search ||
+                        row.dataset.search.toLowerCase()
+                           .includes(search);
+                    const ss = !stock ||
+                        row.dataset.stock === stock;
+                    row.style.display = ms && ss ? '' : 'none';
+                });
+        }
+    </script>
+}
