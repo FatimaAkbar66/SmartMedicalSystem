@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        @(ViewData["Title"] != null
+                ? ViewData["Title"] + " — SmartMedical"
+                : "Smart Medical Error Prevention System")
+    </title>
+
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet" />
+
+    <!-- Our CSS -->
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body>
+
+    @* ── TOP NAVBAR (only when logged in) ── *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="main-navbar">
+            <div class="navbar-inner">
+
+                <!-- Brand -->
+                <a href="/" class="navbar-brand-link">
+                    <div class="brand-icon">
+                        <i class="bi bi-hospital-fill"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">SmartMedical</span>
+                        <span class="brand-sub">Error Prevention System</span>
+                    </div>
+                </a>
+
+                <!-- Nav Links -->
+                <ul class="nav-links">
+
+                    @if (User.IsInRole("Doctor"))
+                    {
+                        <li>
+                            <a asp-controller="Doctor"
+                               asp-action="Index"
+                               class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Doctor" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Doctor"
+                               asp-action="Patients"
+                               class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Doctor" && ViewContext.RouteData.Values["action"]?.ToString() == "Patients" ? "active" : "")">
+                                <i class="bi bi-people-fill"></i>
+                                <span>Patients</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Prescription"
+                               asp-action="Create"
+                               class="nav-link-item highlight">
+                                <i class="bi bi-plus-circle-fill"></i>
+                                <span>New Prescription</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Prescription"
+                               asp-action="List"
+                               class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Prescription" ? "active" : "")">
+                                <i class="bi bi-journal-medical"></i>
+                                <span>Prescriptions</span>
+                            </a>
+                        </li>
+                    }
+
+                    @if (User.IsInRole("Pharmacist"))
+                    {
+                        <li>
+                            <a asp-controller="Pharmacy"
+                               asp-action="Index"
+                               class="nav-link-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Pharmacy"
+                               asp-action="Inventory"
+                               class="nav-link-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">
+                                <i class="bi bi-boxes"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                    }
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li>
+                            <a asp-controller="Admin"
+                               asp-action="Index"
+                               class="nav-link-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Admin"
+                               asp-action="Users"
+                               class="nav-link-item">
+                                <i class="bi bi-people-fill"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Admin"
+                               asp-action="Medicines"
+                               class="nav-link-item">
+                                <i class="bi bi-capsule"></i>
+                                <span>Medicines</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Admin"
+                               asp-action="DrugInteractions"
+                               class="nav-link-item">
+                                <i class="bi bi-exclamation-diamond"></i>
+                                <span>Interactions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Admin"
+                               asp-action="AuditLog"
+                               class="nav-link-item">
+                                <i class="bi bi-shield-check"></i>
+                                <span>Audit Log</span>
+                            </a>
+                        </li>
+                    }
+
+                    @if (User.IsInRole("Patient"))
+                    {
+                        <li>
+                            <a asp-controller="Patient"
+                               asp-action="Index"
+                               class="nav-link-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Patient"
+                               asp-action="Prescriptions"
+                               class="nav-link-item">
+                                <i class="bi bi-journal-medical"></i>
+                                <span>My Prescriptions</span>
+                            </a>
+                        </li>
+                    }
+
+                </ul>
+
+                <!-- User Menu -->
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        @User.Identity?.Name?.Substring(0, 1).ToUpper()
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">@User.Identity?.Name</span>
+                        <span class="user-role">
+                            @User.Claims.FirstOrDefault(c =>
+                            c.Type == System.Security.Claims.ClaimTypes.Role)?.Value
+                        </span>
+                    </div>
+                    <a asp-controller="Account"
+                       asp-action="Logout"
+                       class="logout-btn"
+                       title="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </a>
+                </div>
+
+            </div>
+        </nav>
+    }
+
+    @* ── MAIN CONTENT ── *@
+    <main class="@(User.Identity?.IsAuthenticated == true
+                        ? "page-main" : "page-main-auth")">
+
+        @* Global success toast *@
+        @if (TempData["Success"] != null)
+        {
+            <div class="global-toast toast-success" id="globalToast">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@TempData["Success"]</span>
+                <button onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+
+        @* Global error toast *@
+        @if (TempData["Error"] != null)
+        {
+            <div class="global-toast toast-error" id="globalToast">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>@TempData["Error"]</span>
+                <button onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+
+    <!-- Auto-hide toast -->
+    <script>
+            setTimeout(() => {
+                const t = document.getElementById('globalToast');
+                if (t) t.style.opacity = '0';
+                setTimeout(() => { if (t) t.remove(); }, 400);
+            }, 4000);
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
