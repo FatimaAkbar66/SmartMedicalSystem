@@ -435,7 +435,7 @@ SmartMedicalSystem/
 **Step 1 — Clone the Repository**
 
 ```bash
-git clone https://github.com/YourUsername/SmartMedicalSystem.git
+git clone https://github.com/FatimaAkbar66/SmartMedicalSystem.git
 cd SmartMedicalSystem
 ```
 
@@ -661,18 +661,6 @@ ML.NET
 
 ---
 
-## 🏫 Academic Information
-
-```
-Institution  :  KICSIT, Kahuta
-Department   :  Computer Science
-Course       :  Visual Programming
-Semester     :  6th Semester (CS-VI-A)
-Year         :  2024
-Supervisor   :  Sir Uzair Hassan
-```
-
----
 
 ## 📚 References
 
@@ -687,15 +675,7 @@ Supervisor   :  Sir Uzair Hassan
 
 ## 📄 License
 
-This project is developed for **academic purposes** at KICSIT, Kahuta.
-Developed as part of the Visual Programming course project requirements.
-
-```
-MIT License — Free to use for educational purposes
-© 2024 KICSIT, Kahuta — Department of Computer Science
-```
-
----
+This project is developed for **academic purposes** 
 
 <div align="center">
 
